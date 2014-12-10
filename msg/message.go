@@ -1,6 +1,10 @@
 package msg
 
-import "github.com/huangml/dispatch/sink"
+import (
+	"net/http"
+
+	"github.com/huangml/dispatch/sink"
+)
 
 type Request struct {
 	Protocol string
@@ -17,18 +21,38 @@ func NewRequest(protocol string, s *sink.Sink) *Request {
 }
 
 type Response struct {
-	Err error
+	Err *MsgError
 	*sink.Sink
-}
-
-func ErrResponse(err error) *Response {
-	return &Response{
-		Err: err,
-	}
 }
 
 func NewResponse(s *sink.Sink) *Response {
 	return &Response{
 		Sink: s,
 	}
+}
+
+func ErrWithText(statusCode int, text string) *Response {
+	return &Response{
+		Err: &MsgError{
+			StatusCode: statusCode,
+			Text:       text,
+		},
+	}
+}
+
+func Err(statusCode int) *Response {
+	return &Response{
+		Err: &MsgError{
+			StatusCode: statusCode,
+		},
+	}
+}
+
+type MsgError struct {
+	StatusCode int
+	Text       string
+}
+
+func (e *MsgError) Error() string {
+	return http.StatusText(e.StatusCode) + " [" + e.Text + "]"
 }

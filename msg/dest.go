@@ -1,8 +1,8 @@
 package msg
 
 import (
-	"errors"
 	"fmt"
+	"net/http"
 	"runtime/debug"
 	"sync"
 )
@@ -59,14 +59,14 @@ func (d *Dest) handle(req *Request) (rsp *Response) {
 	if h := d.getHandler(req.Protocol); h != nil {
 		defer func() {
 			if err := recover(); err != nil {
-				rsp = ErrResponse(errors.New(fmt.Sprintf("PANIC: %s\n%s", err, debug.Stack())))
+				rsp = ErrWithText(http.StatusInternalServerError, fmt.Sprintf("PANIC: %s\n%s", err, debug.Stack()))
 			}
 		}()
 
 		rsp = h(newLocker(&d.mtx), req)
 
 	} else {
-		rsp = ErrResponse(errors.New("protocol not implemented"))
+		rsp = ErrWithText(http.StatusNotImplemented, "no handler found")
 	}
 
 	return

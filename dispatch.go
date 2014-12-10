@@ -1,7 +1,7 @@
 package dispatch
 
 import (
-	"errors"
+	"net/http"
 
 	"github.com/huangml/dispatch/msg"
 )
@@ -14,7 +14,7 @@ func (d *Dispatcher) Call(addr string, l *msg.Locker, req *msg.Request) *msg.Res
 	if p := d.b.Find(addr); p != nil {
 		return p.Call(l, req)
 	} else {
-		return msg.ErrResponse(errors.New("not found"))
+		return msg.ErrWithText(http.StatusNotFound, "dest not found")
 	}
 }
 
@@ -23,6 +23,6 @@ func (d *Dispatcher) Send(addr string, req *msg.Request) error {
 		p.Send(req)
 		return nil
 	} else {
-		return errors.New("not found")
+		return msg.ErrWithText(http.StatusNotFound, "dest not found").Err
 	}
 }
