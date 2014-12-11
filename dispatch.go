@@ -1,28 +1,34 @@
 package dispatch
 
 import (
-	"net/http"
+	"errors"
 
 	"github.com/huangml/dispatch/msg"
 )
+
+type Dest interface {
+	Call(*msg.Context, msg.Request) msg.Response
+	Send(msg.Request) error
+}
+
+type AddressBook interface {
+	Lookup(r msg.Request) Dest
+}
 
 type Dispatcher struct {
 	b AddressBook
 }
 
-func (d *Dispatcher) Call(addr string, l *msg.Locker, req *msg.Request) *msg.Response {
-	if p := d.b.Find(addr); p != nil {
-		return p.Call(l, req)
-	} else {
-		return msg.ErrWithText(http.StatusNotFound, "dest not found")
+func (d *Dispatcher) Call(ctx *msg.Context, r msg.Request) msg.Response {
+	if dst := d.b.Lookup(r); dst != nil {
+		return dst.Call(ctx, r)
 	}
+	return msg.Err("dest not found, protocol: " + r.Protocol())
 }
 
-func (d *Dispatcher) Send(addr string, req *msg.Request) error {
-	if p := d.b.Find(addr); p != nil {
-		p.Send(req)
-		return nil
-	} else {
-		return msg.ErrWithText(http.StatusNotFound, "dest not found").Err
+func (d *Dispatcher) Send(r msg.Request) error {
+	if dst := d.b.Lookup(r); dst != nil {
+		return dst.Send(r)
 	}
+	return errors.New("dest not found, protocol: " + r.Protocol())
 }

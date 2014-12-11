@@ -1,4 +1,4 @@
-package sink
+package msg
 
 import (
 	"io"
@@ -11,21 +11,21 @@ type Sink struct {
 	b []byte
 }
 
-func FromString(v string) *Sink {
+func NewTextSink(v string) *Sink {
 	return &Sink{
 		ContentType: Text,
 		b:           []byte(v),
 	}
 }
 
-func FromBytes(b []byte) *Sink {
+func NewBytesSink(b []byte) *Sink {
 	return &Sink{
 		ContentType: Bytes,
 		b:           b,
 	}
 }
 
-func FromProtoMessage(m proto.Message) *Sink {
+func NewProtoSink(m proto.Message) *Sink {
 	if b, err := proto.Marshal(m); err == nil {
 		return &Sink{
 			ContentType: ProtoBuf,
