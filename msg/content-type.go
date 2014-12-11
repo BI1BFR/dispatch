@@ -20,16 +20,3 @@ func (c ContentType) String() string {
 		return "Unknown"
 	}
 }
-
-// func (c ContentType) ToHTTP() string {
-// 	switch c {
-// 	case Bytes:
-// 		return "application/octet-stream"
-// 	case Text:
-// 		return "text/plain"
-// 	case ProtoBuf:
-// 		return "application/x-protobuf"
-// 	default:
-// 		return "application/octet-stream"
-// 	}
-// }
