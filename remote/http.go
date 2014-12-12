@@ -70,7 +70,7 @@ func DefaultRequestBuildFunc(r msg.Request, url, method string) *http.Request {
 		return nil
 	}
 
-	req.Header.Set(ContentTypeKey, contentToHTTP(sink.ContentType))
+	req.Header.Set(ContentTypeKey, contentTypeToHTTP(sink.ContentType))
 	if r, ok := r.(*Request); ok {
 		if r.Auth != nil {
 			req.SetBasicAuth(r.Auth.UserName, r.Auth.Password)
@@ -86,7 +86,7 @@ func DefaultRequestBuildFunc(r msg.Request, url, method string) *http.Request {
 func DefaultResponseWriteFunc(w http.ResponseWriter, r msg.Response) {
 	if sink := r.Body(); sink != nil {
 		defer w.Write(sink.Bytes())
-		w.Header().Set(ContentTypeKey, contentToHTTP(sink.ContentType))
+		w.Header().Set(ContentTypeKey, contentTypeToHTTP(sink.ContentType))
 	}
 
 	statusCode := http.StatusOK
@@ -134,7 +134,7 @@ func contentTypeFromHTTP(v string) msg.ContentType {
 	}
 }
 
-func contentToHTTP(c msg.ContentType) string {
+func contentTypeToHTTP(c msg.ContentType) string {
 	switch c {
 	case msg.Bytes:
 		return OctetStream

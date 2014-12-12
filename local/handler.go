@@ -17,7 +17,7 @@ type HandlerFunc func(ctx *msg.Context, l sync.Locker, r msg.Request) msg.Respon
 func (f HandlerFunc) Handle(ctx *msg.Context, l sync.Locker, r msg.Request) (rsp msg.Response) {
 	defer func() {
 		if err := recover(); err != nil {
-			rsp = msg.Err(fmt.Sprintf("PANIC: %s\n%s", err, debug.Stack()))
+			rsp = msg.ErrResponse(fmt.Errorf("PANIC: %s\n%s", err, debug.Stack()))
 		}
 	}()
 

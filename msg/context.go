@@ -12,8 +12,7 @@ type Context struct {
 
 func NewContext() (ctx *Context, cancel func()) {
 	c := make(chan struct{})
-	ctx, cancel = &Context{cancel: c}, func() { close(c) }
-	return
+	return &Context{cancel: c}, func() { close(c) }
 }
 
 func NewContextWithTimeOut(t time.Duration) *Context {

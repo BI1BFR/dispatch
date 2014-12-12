@@ -2,6 +2,7 @@ package dispatch
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/huangml/dispatch/msg"
 )
@@ -23,7 +24,7 @@ func (d *Dispatcher) Call(ctx *msg.Context, r msg.Request) msg.Response {
 	if dst := d.b.Lookup(r); dst != nil {
 		return dst.Call(ctx, r)
 	}
-	return msg.Err("dest not found, protocol: " + r.Protocol())
+	return msg.ErrResponse(fmt.Errorf("dest not found, protocol: %v", r.Protocol()))
 }
 
 func (d *Dispatcher) Send(r msg.Request) error {

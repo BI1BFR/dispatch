@@ -2,10 +2,11 @@ package local
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 
 	"github.com/huangml/dispatch/msg"
-	"github.com/huangml/dispatch/mux"
+	"github.com/huangml/mux"
 )
 
 type MuxDest struct {
@@ -14,22 +15,22 @@ type MuxDest struct {
 }
 
 func NewMuxDest() *MuxDest {
-	return &MuxDest{m: mux.New()}
+	return &MuxDest{m: mux.NewPathMux()}
 }
 
 func (d *MuxDest) HandleFunc(pattern string, h HandlerFunc) {
-	d.m.Bind(pattern, h)
+	d.m.Map(pattern, h)
 }
 
 func (d *MuxDest) Handle(pattern string, h Handler) {
-	d.m.Bind(pattern, h)
+	d.m.Map(pattern, h)
 }
 
 func (d *MuxDest) Call(ctx *msg.Context, r msg.Request) msg.Response {
 	if h, _ := d.m.Match(r.Protocol()); h != nil {
 		return h.(Handler).Handle(ctx, &d.mtx, r)
 	}
-	return msg.Err("protocol " + r.Protocol() + " not implemented.")
+	return msg.ErrResponse(fmt.Errorf("protocol %v not implemented", r.Protocol()))
 }
 
 func (d *MuxDest) Send(r msg.Request) error {
