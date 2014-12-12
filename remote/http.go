@@ -148,7 +148,7 @@ func contentToHTTP(c msg.ContentType) string {
 }
 
 func parseAuth(r *http.Request) *Auth {
-	if username, password, ok := BasicAuth(r); ok {
+	if username, password, ok := r.BasicAuth(); ok {
 		return &Auth{
 			UserName: username,
 			Password: password,
