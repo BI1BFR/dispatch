@@ -3,7 +3,7 @@ package msg
 import (
 	"io"
 
-	"code.google.com/p/goprotobuf/proto"
+	"github.com/golang/protobuf/proto"
 )
 
 type Sink struct {
