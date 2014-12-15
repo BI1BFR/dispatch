@@ -1,10 +1,6 @@
 package dispatch
 
-import (
-	"fmt"
-
-	"github.com/huangml/mux"
-)
+import "github.com/huangml/mux"
 
 type Dest interface {
 	Call(ctx *Context, r Request) Response
@@ -46,7 +42,7 @@ func (d *MuxDest) Call(ctx *Context, r Request) Response {
 	if h := d.mu.Match(r.Protocol()); h != nil {
 		return h.(HandlerFunc)(ctx, d.mtx, r)
 	}
-	return ErrResponse(protocolNotFoundErr(r.Protocol()))
+	return ErrResponse(ProtocolNotImplementError(r.Protocol()))
 }
 
 func (d *MuxDest) Send(r Request) error {
@@ -54,9 +50,5 @@ func (d *MuxDest) Send(r Request) error {
 		go h.(HandlerFunc)(NewContext(), d.mtx, r)
 		return nil
 	}
-	return protocolNotFoundErr(r.Protocol())
-}
-
-func protocolNotFoundErr(protocol string) error {
-	return fmt.Errorf("protocol %v not implemented", protocol)
+	return ProtocolNotImplementError(r.Protocol())
 }

@@ -63,16 +63,21 @@ func (s *Sink) Write(w io.Writer) {
 
 type Request interface {
 	Protocol() string
+	Dest() string
 	Body() *Sink
 }
 
 type SimpleRequest struct {
-	Proto string
+	Proto, Dst string
 	*Sink
 }
 
 func (s *SimpleRequest) Protocol() string {
 	return s.Proto
+}
+
+func (s *SimpleRequest) Dest() string {
+	return s.Dst
 }
 
 func (s *SimpleRequest) Body() *Sink {
