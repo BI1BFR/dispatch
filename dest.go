@@ -6,6 +6,11 @@ import (
 	"github.com/huangml/mux"
 )
 
+type Dest interface {
+	Call(ctx *Context, r Request) Response
+	Send(r Request) error
+}
+
 type LockedDest struct {
 	h HandlerFunc
 	m Mutex

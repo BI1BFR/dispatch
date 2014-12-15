@@ -1,28 +1,31 @@
 package dispatch
 
-// type Dest interface {
-// 	Call(*msg.Context, msg.Request) msg.Response
-// 	Send(msg.Request) error
-// }
+import "fmt"
 
-// type AddressBook interface {
-// 	Lookup(r msg.Request) Dest
-// }
+type AddressBook interface {
+	Lookup(r Request) Dest
+}
 
-// type Dispatcher struct {
-// 	b AddressBook
-// }
+type Dispatcher struct {
+	AddressBook
+}
 
-// func (d *Dispatcher) Call(ctx *msg.Context, r msg.Request) msg.Response {
-// 	if dst := d.b.Lookup(r); dst != nil {
-// 		return dst.Call(ctx, r)
-// 	}
-// 	return msg.ErrResponse(fmt.Errorf("dest not found, protocol: %v", r.Protocol()))
-// }
+func (d *Dispatcher) Call(ctx *Context, r Request) Response {
+	if dst := d.Lookup(r); dst != nil {
+		return dst.Call(ctx, r)
+	} else {
+		return ErrResponse(destNotFoundError(r.Protocol()))
+	}
+}
 
-// func (d *Dispatcher) Send(r msg.Request) error {
-// 	if dst := d.b.Lookup(r); dst != nil {
-// 		return dst.Send(r)
-// 	}
-// 	return errors.New("dest not found, protocol: " + r.Protocol())
-// }
+func (d *Dispatcher) Send(r Request) error {
+	if dst := d.Lookup(r); dst != nil {
+		return dst.Send(r)
+	} else {
+		return destNotFoundError(r.Protocol())
+	}
+}
+
+func destNotFoundError(protocol string) error {
+	return fmt.Errorf("Dest not found, protocol: %v", protocol)
+}
