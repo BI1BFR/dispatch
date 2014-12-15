@@ -1,10 +1,8 @@
-package remote
+package dispatch
 
 import (
 	"net/http"
 	"time"
-
-	"github.com/huangml/dispatch/msg"
 )
 
 type Auth struct {
@@ -12,31 +10,31 @@ type Auth struct {
 	Password string
 }
 
-type Request struct {
+type RemoteRequest struct {
 	Proto string
-	*msg.Sink
+	*Sink
 	*Auth
 	TimeOut time.Duration
 }
 
-func (r *Request) Protocol() string {
+func (r *RemoteRequest) Protocol() string {
 	return r.Proto
 }
 
-func (r *Request) Body() *msg.Sink {
+func (r *RemoteRequest) Body() *Sink {
 	return r.Sink
 }
 
-type Response struct {
+type RemoteResponse struct {
 	*statusError
-	*msg.Sink
+	*Sink
 }
 
-func (r *Response) Error() error {
+func (r *RemoteResponse) Error() error {
 	return r.statusError
 }
 
-func (r *Response) Body() *msg.Sink {
+func (r *RemoteResponse) Body() *Sink {
 	return r.Sink
 }
 
