@@ -90,16 +90,20 @@ type Response interface {
 }
 
 type SimpleResponse struct {
-	Err  error
-	Body *Sink
+	Err error
+	*Sink
+}
+
+func (s *SimpleResponse) Error() error {
+	return s.Err
+}
+
+func (s *SimpleResponse) Body() *Sink {
+	return s.Sink
 }
 
 type errResponse struct {
 	e error
-}
-
-func ErrResponse(err error) Response {
-	return errResponse{e: err}
 }
 
 func (e errResponse) Error() error {
@@ -108,4 +112,8 @@ func (e errResponse) Error() error {
 
 func (e errResponse) Body() *Sink {
 	return nil
+}
+
+func ErrResponse(err error) Response {
+	return errResponse{e: err}
 }
