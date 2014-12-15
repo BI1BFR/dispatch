@@ -1,8 +1,6 @@
 package dispatch
 
 import (
-	"errors"
-	"fmt"
 	"runtime/debug"
 	"time"
 )
@@ -60,29 +58,33 @@ func (ctx *Context) Release() {
 }
 
 type HandlerFunc func(ctx *Context, m Mutex, r Request) Response
+type LockedHandlerFunc func(r Request) Response
 
-func (f HandlerFunc) Handle(ctx *Context, m Mutex, r Request) Response {
-	var rsp Response
+type Handler HandlerFunc
+
+func (h Handler) Handle(ctx *Context, m Mutex, r Request) (rsp Response) {
 	defer func() {
 		if err := recover(); err != nil {
-			rsp = ErrResponse(fmt.Errorf("PANIC: %s\n%s", err, debug.Stack()))
+			rsp = ErrResponse(PanicError{err, debug.Stack()})
 		}
 	}()
 
-	rsp = f(ctx, m, r)
-	return rsp
+	rsp = h(ctx, m, r)
+	return
 }
 
-type LockedHandlerFunc func(r Request) Response
+func NewHandler(f HandlerFunc) Handler {
+	return Handler(f)
+}
 
-func (f LockedHandlerFunc) ToHandlerFunc() HandlerFunc {
-	return func(ctx *Context, m Mutex, r Request) Response {
+func NewLockedHandler(f LockedHandlerFunc) Handler {
+	return Handler(func(ctx *Context, m Mutex, r Request) Response {
 		if ctx.AcquireOrCancel(m) {
 			defer ctx.Release()
 
 			return f(r)
 		} else {
-			return ErrResponse(errors.New("Request Canceled"))
+			return ErrResponse(ContextCanceledError{})
 		}
-	}
+	})
 }
