@@ -88,6 +88,5 @@ func safeServe(f HandlerFunc, ctx *Context, m Mutex, r Request) (rsp Response) {
 		}
 	}()
 
-	rsp = f(ctx, m, r)
-	return
+	return f(ctx, m, r)
 }
