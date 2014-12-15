@@ -57,34 +57,37 @@ func (ctx *Context) Release() {
 	<-ctx.m <- struct{}{}
 }
 
+type Handler interface {
+	Serve(ctx *Context, m Mutex, r Request) Response
+}
+
 type HandlerFunc func(ctx *Context, m Mutex, r Request) Response
+
+func (f HandlerFunc) Serve(ctx *Context, m Mutex, r Request) (rsp Response) {
+	return safeServe(f, ctx, m, r)
+}
+
 type LockedHandlerFunc func(r Request) Response
 
-type Handler HandlerFunc
+func (f LockedHandlerFunc) Serve(ctx *Context, m Mutex, r Request) Response {
+	if ctx.AcquireOrCancel(m) {
+		defer ctx.Release()
 
-func (h Handler) Handle(ctx *Context, m Mutex, r Request) (rsp Response) {
+		return safeServe(func(ctx *Context, m Mutex, r Request) Response {
+			return f(r)
+		}, ctx, m, r)
+	} else {
+		return ErrResponse(ContextCanceledError{})
+	}
+}
+
+func safeServe(f HandlerFunc, ctx *Context, m Mutex, r Request) (rsp Response) {
 	defer func() {
 		if err := recover(); err != nil {
 			rsp = ErrResponse(PanicError{err, debug.Stack()})
 		}
 	}()
 
-	rsp = h(ctx, m, r)
+	rsp = f(ctx, m, r)
 	return
-}
-
-func NewHandler(f HandlerFunc) Handler {
-	return Handler(f)
-}
-
-func NewLockedHandler(f LockedHandlerFunc) Handler {
-	return Handler(func(ctx *Context, m Mutex, r Request) Response {
-		if ctx.AcquireOrCancel(m) {
-			defer ctx.Release()
-
-			return f(r)
-		} else {
-			return ErrResponse(ContextCanceledError{})
-		}
-	})
 }
