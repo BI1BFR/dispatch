@@ -21,8 +21,8 @@ type ConcurrentDest struct {
 	h Handler
 }
 
-// NewUnlockedDest creates an ConcurrentDest with provided Handler.
-func NewUnlockedDest(h Handler) *ConcurrentDest {
+// NewConcurrentDest creates an ConcurrentDest with provided Handler.
+func NewConcurrentDest(h Handler) *ConcurrentDest {
 	return &ConcurrentDest{h: h}
 }
 

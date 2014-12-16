@@ -3,8 +3,8 @@ package dispatch
 // AddressBook is used to get a Dest by a Request(typically by r.Dest()).
 // It is left to the package user to implement a concrete AddressBook.
 //
-// Note that AddressBook is not necessarily to be a Dest container, it could be
-// either a factory or a loader, etc.
+// Note that AddressBook is not necessarily to be a Dest container, it may also
+// be a factory or a loader, etc.
 type AddressBook interface {
 	Lookup(r Request) Dest
 }
