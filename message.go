@@ -1,8 +1,7 @@
 package dispatch
 
-//go:generate stringer -type=ContentType -output=enums-gen.go
-
 import (
+	"fmt"
 	"io"
 
 	"github.com/golang/protobuf/proto"
@@ -16,6 +15,19 @@ const (
 	Text                            // printable string
 	ProtoBuf                        // protobuf message
 )
+
+func (c ContentType) String() string {
+	switch c {
+	case Bytes:
+		return "Bytes"
+	case Text:
+		return "Text"
+	case ProtoBuf:
+		return "ProtoBuf"
+	default:
+		return fmt.Sprintf("ContextType(%d)", c)
+	}
+}
 
 // A Sink carries binary bytes, string, or a protobuf message. Internally datas
 // are converted to []byte.
