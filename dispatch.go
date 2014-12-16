@@ -12,7 +12,7 @@ func (d *Dispatcher) Call(ctx *Context, r Request) Response {
 	if dst := d.Lookup(r); dst != nil {
 		return dst.Call(ctx, r)
 	} else {
-		return ErrResponse(DestNotFoundError(r.Dest()))
+		return &SimpleResponse{Err: DestNotFoundError(r.Dest())}
 	}
 }
 

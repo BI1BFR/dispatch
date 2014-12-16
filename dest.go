@@ -42,7 +42,7 @@ func (d *MuxDest) Call(ctx *Context, r Request) Response {
 	if h := d.mu.Match(r.Protocol()); h != nil {
 		return h.(Handler).Serve(ctx, d.mtx, r)
 	}
-	return ErrResponse(ProtocolNotImplementError(r.Protocol()))
+	return &SimpleResponse{Err: ProtocolNotImplementError(r.Protocol())}
 }
 
 func (d *MuxDest) Send(r Request) error {

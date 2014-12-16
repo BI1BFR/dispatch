@@ -101,19 +101,3 @@ func (s *SimpleResponse) Error() error {
 func (s *SimpleResponse) Body() *Sink {
 	return s.Sink
 }
-
-type errResponse struct {
-	e error
-}
-
-func (e errResponse) Error() error {
-	return e.e
-}
-
-func (e errResponse) Body() *Sink {
-	return nil
-}
-
-func ErrResponse(err error) Response {
-	return errResponse{e: err}
-}

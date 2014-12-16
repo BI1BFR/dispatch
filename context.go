@@ -71,14 +71,14 @@ func (f LockedHandlerFunc) Serve(ctx *Context, m Mutex, r Request) Response {
 			return f(r)
 		}, ctx, m, r)
 	} else {
-		return ErrResponse(ContextCanceledError{})
+		return &SimpleResponse{Err: ContextCanceledError{}}
 	}
 }
 
 func safeServe(f HandlerFunc, ctx *Context, m Mutex, r Request) (rsp Response) {
 	defer func() {
 		if err := recover(); err != nil {
-			rsp = ErrResponse(PanicError{err, debug.Stack()})
+			rsp = &SimpleResponse{Err: PanicError{err, debug.Stack()}}
 		}
 	}()
 
