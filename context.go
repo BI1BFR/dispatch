@@ -136,7 +136,6 @@ func (f LockedHandlerFunc) Serve(ctx *Context, m Mutex, r Request) (rsp Response
 
 		return f(r)
 
-	} else {
-		return NewSimpleResponse(nil, ContextCanceledError{})
 	}
+	return NewSimpleResponse(nil, ContextCanceledError{})
 }

@@ -10,29 +10,29 @@ import "github.com/huangml/mux"
 // been processed; Send() is used for asynchronous communication, it spawns a
 // new goroutine to process Request and returns immediately.
 //
-// See UnlockedDest, LockedDest and MuxDest for more details.
+// See ConcurrentDest, LockedDest and MuxDest for more details.
 type Dest interface {
 	Call(ctx *Context, r Request) Response
 	Send(r Request) error
 }
 
-// UnlockedDest is a Dest that Requests are processed concurrently.
-type UnlockedDest struct {
+// ConcurrentDest is a Dest that Requests are processed concurrently.
+type ConcurrentDest struct {
 	h Handler
 }
 
-// NewUnlockedDest creates an UnlockedDest with provided Handler.
-func NewUnlockedDest(h Handler) *UnlockedDest {
-	return &UnlockedDest{h: h}
+// NewUnlockedDest creates an ConcurrentDest with provided Handler.
+func NewUnlockedDest(h Handler) *ConcurrentDest {
+	return &ConcurrentDest{h: h}
 }
 
 // Call is for synchronous communication.
-func (d *UnlockedDest) Call(ctx *Context, r Request) Response {
+func (d *ConcurrentDest) Call(ctx *Context, r Request) Response {
 	return d.h.Serve(ctx, NewMutex(), r)
 }
 
 // Send is for asynchronous communication.
-func (d *UnlockedDest) Send(r Request) error {
+func (d *ConcurrentDest) Send(r Request) error {
 	go d.h.Serve(NewContext(), NewMutex(), r)
 	return nil
 }

@@ -23,17 +23,15 @@ type Dispatcher struct {
 func (d *Dispatcher) Call(ctx *Context, r Request) Response {
 	if dst := d.Lookup(r); dst != nil {
 		return dst.Call(ctx, r)
-	} else {
-		return NewSimpleResponse(nil, DestNotFoundError(r.Address()))
 	}
+	return NewSimpleResponse(nil, DestNotFoundError(r.Address()))
 }
 
-// Call dispatches a send to a Dest. It returns a Response with DestNotFoundError
+// Send dispatches a send to a Dest. It returns a Response with DestNotFoundError
 // if no Dest found in the AddressBook.
 func (d *Dispatcher) Send(r Request) error {
 	if dst := d.Lookup(r); dst != nil {
 		return dst.Send(r)
-	} else {
-		return DestNotFoundError(r.Address())
 	}
+	return DestNotFoundError(r.Address())
 }
