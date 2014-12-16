@@ -8,13 +8,11 @@ import (
 type Mutex chan struct{}
 
 func NewMutex() Mutex {
-	l := make(chan struct{}, 1)
-	l <- struct{}{}
-	return l
+	return make(chan struct{}, 1)
 }
 
 type Context struct {
-	m      chan Mutex
+	m      []Mutex
 	cancel chan struct{}
 }
 
@@ -30,19 +28,14 @@ func NewContextWithTimeOut(t time.Duration) *Context {
 }
 
 func NewContextWithCancel() (ctx *Context, cancel func()) {
-	m := make(chan Mutex, 1)
 	c := make(chan struct{})
-	return &Context{m: m, cancel: c}, func() { close(c) }
+	return &Context{cancel: c}, func() { close(c) }
 }
 
 func (ctx *Context) AcquireOrCancel(m Mutex) bool {
-	if len(ctx.m) > 0 {
-		panic("Context has already locked a Mutex")
-	}
-
 	select {
-	case <-m:
-		ctx.m <- m
+	case m <- struct{}{}:
+		ctx.m = append(ctx.m, m)
 		return true
 	case <-ctx.cancel:
 		return false
@@ -50,11 +43,12 @@ func (ctx *Context) AcquireOrCancel(m Mutex) bool {
 }
 
 func (ctx *Context) Release() {
-	if len(ctx.m) == 0 {
+	if n := len(ctx.m); n > 0 {
+		<-ctx.m[n-1]
+		ctx.m = ctx.m[:n-1]
+	} else {
 		panic("Context is not obtaining any Mutex")
 	}
-
-	<-ctx.m <- struct{}{}
 }
 
 type Handler interface {
