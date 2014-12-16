@@ -68,20 +68,29 @@ type Request interface {
 }
 
 type SimpleRequest struct {
-	Proto, Dst string
-	*Sink
+	protocol string
+	dest     string
+	body     *Sink
 }
 
 func (s *SimpleRequest) Protocol() string {
-	return s.Proto
+	return s.protocol
 }
 
 func (s *SimpleRequest) Dest() string {
-	return s.Dst
+	return s.dest
 }
 
 func (s *SimpleRequest) Body() *Sink {
-	return s.Sink
+	return s.body
+}
+
+func NewSimpleRequest(protocol, dest string, body *Sink) *SimpleRequest {
+	return &SimpleRequest{
+		protocol: protocol,
+		dest:     dest,
+		body:     body,
+	}
 }
 
 type Response interface {
@@ -90,14 +99,21 @@ type Response interface {
 }
 
 type SimpleResponse struct {
-	Err error
-	*Sink
+	e    error
+	body *Sink
 }
 
 func (s *SimpleResponse) Error() error {
-	return s.Err
+	return s.e
 }
 
 func (s *SimpleResponse) Body() *Sink {
-	return s.Sink
+	return s.body
+}
+
+func NewSimpleResponse(body *Sink, err error) *SimpleResponse {
+	return &SimpleResponse{
+		e:    err,
+		body: body,
+	}
 }
