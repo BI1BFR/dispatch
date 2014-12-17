@@ -40,35 +40,35 @@ func (d *ConcurrentDest) Send(r Request) error {
 // LockedDest is a Dest that Requests are processed sequentially.
 type LockedDest struct {
 	h Handler
-	m Mutex
+	Mutex
 }
 
 // NewLockedDest creates a LockedDest with provided Handler.
 func NewLockedDest(h Handler) *LockedDest {
-	return &LockedDest{h: h, m: NewMutex()}
+	return &LockedDest{h: h, Mutex: NewMutex()}
 }
 
 // Call is for synchronous communication.
 func (d *LockedDest) Call(ctx *Context, r Request) Response {
-	return d.h.Serve(ctx, d.m, r)
+	return d.h.Serve(ctx, d.Mutex, r)
 }
 
 // Send is for asynchronous communication.
 func (d *LockedDest) Send(r Request) error {
-	go d.h.Serve(NewContext(), d.m, r)
+	go d.h.Serve(NewContext(), d.Mutex, r)
 	return nil
 }
 
 // MuxDest is a Dest carries mutiple Handlers.
 type MuxDest struct {
-	mu  *mux.Mux
-	mtx Mutex
+	mu *mux.Mux
+	Mutex
 }
 
 // NewMuxDest creates a MuxDest with provided Mux.
 // Note that passed Mux MUST either be empty or only has values of type Handler.
 func NewMuxDest(m *mux.Mux) *MuxDest {
-	return &MuxDest{mu: m, mtx: NewMutex()}
+	return &MuxDest{mu: m, Mutex: NewMutex()}
 }
 
 // Handle binds a Handler to a pattern.
@@ -81,7 +81,7 @@ func (d *MuxDest) Handle(pattern string, h Handler) {
 // protocol.
 func (d *MuxDest) Call(ctx *Context, r Request) Response {
 	if h := d.mu.Match(r.Protocol()); h != nil {
-		return h.(Handler).Serve(ctx, d.mtx, r)
+		return h.(Handler).Serve(ctx, d.Mutex, r)
 	}
 	return NewSimpleResponse(nil, ProtocolNotImplementError(r.Protocol()))
 }
@@ -91,7 +91,7 @@ func (d *MuxDest) Call(ctx *Context, r Request) Response {
 // protocol.
 func (d *MuxDest) Send(r Request) error {
 	if h := d.mu.Match(r.Protocol()); h != nil {
-		go h.(Handler).Serve(NewContext(), d.mtx, r)
+		go h.(Handler).Serve(NewContext(), d.Mutex, r)
 		return nil
 	}
 	return ProtocolNotImplementError(r.Protocol())

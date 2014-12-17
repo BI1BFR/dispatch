@@ -15,6 +15,14 @@ import (
 //
 type Mutex chan struct{}
 
+func (m Mutex) Lock() {
+	m <- struct{}{}
+}
+
+func (m Mutex) Unlock() {
+	<-m
+}
+
 // NewMutex creates an unlocked Mutex.
 func NewMutex() Mutex {
 	return make(chan struct{}, 1)
@@ -53,6 +61,10 @@ func NewContextWithTimeOut(t time.Duration) *Context {
 func NewContextWithCancel() (ctx *Context, cancel func()) {
 	c := make(chan struct{})
 	return &Context{cancel: c}, func() { close(c) }
+}
+
+func (ctx *Context) Canceled() <-chan struct{} {
+	return ctx.cancel
 }
 
 // AcquireOrCancel should be called before accessing shared resources. It returns
