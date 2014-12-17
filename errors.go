@@ -8,7 +8,7 @@ type ProtocolNotImplementError string
 
 // Error returns error infomation with the protocol.
 func (e ProtocolNotImplementError) Error() string {
-	return fmt.Sprintf("Protocol %s not implemented.", e)
+	return fmt.Sprintf("Protocol %s not implemented.", string(e))
 }
 
 // DestNotFoundError records an error when no Dest found by Request's Address().
@@ -16,7 +16,7 @@ type DestNotFoundError string
 
 // Error returns error information with the address.
 func (e DestNotFoundError) Error() string {
-	return fmt.Sprintf("Dest %s not found.", e)
+	return fmt.Sprintf("Dest %s not found.", string(e))
 }
 
 // ContextCanceledError records an error when Context canceled before processing
