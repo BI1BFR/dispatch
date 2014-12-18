@@ -9,7 +9,7 @@ import (
 func TestConcurrentDest(t *testing.T) {
 	h := func(r Request) Response {
 		time.Sleep(time.Millisecond * 3)
-		return NewSimpleResponse(nil, nil)
+		return SimpleResponse(nil, nil)
 	}
 
 	m := NewConcurrentDest(LockedHandlerFunc(h))
@@ -40,7 +40,7 @@ func TestConcurrentDest(t *testing.T) {
 func TestLockedDest(t *testing.T) {
 	h := func(r Request) Response {
 		time.Sleep(time.Millisecond * 3)
-		return NewSimpleResponse(nil, nil)
+		return SimpleResponse(nil, nil)
 	}
 
 	m := NewLockedDest(LockedHandlerFunc(h))

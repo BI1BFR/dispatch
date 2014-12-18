@@ -144,7 +144,7 @@ func TestHandler(t *testing.T) {
 
 	h1 := func(r Request) Response {
 		val++
-		return NewSimpleResponse(NewTextSink(strconv.Itoa(val)), nil)
+		return SimpleResponse(TextSink(strconv.Itoa(val)), nil)
 	}
 
 	r := LockedHandlerFunc(h1).Serve(NewContext(), NewMutex(), nil)

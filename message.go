@@ -1,6 +1,7 @@
 package dispatch
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 
@@ -13,7 +14,8 @@ type ContentType int
 const (
 	Bytes    ContentType = iota + 1 // binary bytes
 	Text                            // printable string
-	ProtoBuf                        // protobuf message
+	Json                            // json string
+	Protobuf                        // protobuf message
 )
 
 func (c ContentType) String() string {
@@ -22,8 +24,10 @@ func (c ContentType) String() string {
 		return "Bytes"
 	case Text:
 		return "Text"
-	case ProtoBuf:
-		return "ProtoBuf"
+	case Json:
+		return "Json"
+	case Protobuf:
+		return "Protobuf"
 	default:
 		return fmt.Sprintf("ContextType(%d)", c)
 	}
@@ -36,28 +40,40 @@ type Sink struct {
 	b []byte
 }
 
-// NewTextSink creates a Sink by string. The Sink's ContentType will be Text.
-func NewTextSink(v string) *Sink {
+// TextSink creates a Sink by string. The Sink's ContentType will be Text.
+func TextSink(v string) *Sink {
 	return &Sink{
 		ContentType: Text,
 		b:           []byte(v),
 	}
 }
 
-// NewBytesSink creates a Sink by []byte. The Sink's ContentType will be Bytes.
-func NewBytesSink(b []byte) *Sink {
+// BytesSink creates a Sink by []byte. The Sink's ContentType will be Bytes.
+func BytesSink(b []byte) *Sink {
 	return &Sink{
 		ContentType: Bytes,
 		b:           b,
 	}
 }
 
-// NewProtoSink creates a Sink by a protobuf message. The Sink's ContentType
-// will be ProtoBuf.
-func NewProtoSink(m proto.Message) *Sink {
+// JsonSink creates a Sink by a struct. The Sink's ContentType will be Json.
+func JsonSink(j interface{}) *Sink {
+	if b, err := json.Marshal(j); err != nil {
+		return &Sink{
+			ContentType: Json,
+			b:           b,
+		}
+	} else {
+		return nil
+	}
+}
+
+// ProtoSink creates a Sink by a protobuf message. The Sink's ContentType
+// will be Protobuf.
+func ProtoSink(m proto.Message) *Sink {
 	if b, err := proto.Marshal(m); err == nil {
 		return &Sink{
-			ContentType: ProtoBuf,
+			ContentType: Protobuf,
 			b:           b,
 		}
 	}
@@ -74,6 +90,11 @@ func (s *Sink) String() string {
 	return string(s.b)
 }
 
+// UnmarshalJson unmarshals JSON data and store the result in v.
+func (s *Sink) UnmarshalJson(v interface{}) error {
+	return json.Unmarshal(s.b, v)
+}
+
 // UnmarshalProtoMessage unmarshals data to a protobuf message.
 func (s *Sink) UnmarshalProtoMessage(m proto.Message) error {
 	return proto.Unmarshal(s.b, m)
@@ -86,35 +107,39 @@ func (s *Sink) Write(w io.Writer) {
 
 // Request represents a request message.
 // Protocol() indicates the Request's type and how it will be processed.
-// Address() indicates where the Request will be sent.
-// Body() carries Request's ContentType and raw data.
+// Address() indicates where the Request will be sent to.
+// Body() returns Request's ContentType and raw data.
 type Request interface {
 	Protocol() string
 	Address() string
 	Body() *Sink
 }
 
-// SimpleRequest is a simple implemention of Request.
-type SimpleRequest struct {
+// simpleRequest is a simple implemention of Request.
+type simpleRequest struct {
 	protocol string
 	address  string
 	body     *Sink
 }
 
-func (s *SimpleRequest) Protocol() string {
+// Protocol indicates the Request's type and how it will be processed.
+func (s *simpleRequest) Protocol() string {
 	return s.protocol
 }
 
-func (s *SimpleRequest) Address() string {
+// Address indicates where the Request will be sent to.
+func (s *simpleRequest) Address() string {
 	return s.address
 }
 
-func (s *SimpleRequest) Body() *Sink {
+// Body returns Request's ContentType and raw data.
+func (s *simpleRequest) Body() *Sink {
 	return s.body
 }
 
-func NewSimpleRequest(protocol, address string, body *Sink) *SimpleRequest {
-	return &SimpleRequest{
+// SimpleRequest creates a simple Request.
+func SimpleRequest(protocol, address string, body *Sink) Request {
+	return &simpleRequest{
 		protocol: protocol,
 		address:  address,
 		body:     body,
@@ -123,28 +148,31 @@ func NewSimpleRequest(protocol, address string, body *Sink) *SimpleRequest {
 
 // Response represents a response message corrsponding to a Request.
 // Error() returns an none nil error if any error occurs.
-// Body() carries Response's ContentType and raw data.
+// Body() returns Response's ContentType and raw data.
 type Response interface {
 	Error() error
 	Body() *Sink
 }
 
-// SimpleResponse is a simple implemention of Response.
-type SimpleResponse struct {
+// simpleResponse is a simple implemention of Response.
+type simpleResponse struct {
 	e    error
 	body *Sink
 }
 
-func (s *SimpleResponse) Error() error {
+// Error returns an none nil error if any error occurs.
+func (s *simpleResponse) Error() error {
 	return s.e
 }
 
-func (s *SimpleResponse) Body() *Sink {
+// Body returns Response's ContentType and raw data.
+func (s *simpleResponse) Body() *Sink {
 	return s.body
 }
 
-func NewSimpleResponse(body *Sink, err error) *SimpleResponse {
-	return &SimpleResponse{
+// SimpleResponse creates a simple Response
+func SimpleResponse(body *Sink, err error) Response {
+	return &simpleResponse{
 		e:    err,
 		body: body,
 	}

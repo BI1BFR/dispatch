@@ -13,12 +13,22 @@ import (
 //    m <- struct{}{} // lock
 //    <-m             // unlock
 //
+//    // lock or timeout
+//    select {
+//            case m <- struct{}{}:
+//            // success lock
+//            case <-time.After(time.Second):
+//            // timeout
+//    }
+//
 type Mutex chan struct{}
 
+// Lock locks the Mutex.
 func (m Mutex) Lock() {
 	m <- struct{}{}
 }
 
+// Unlock unlocks the Mutex.
 func (m Mutex) Unlock() {
 	<-m
 }
@@ -32,9 +42,11 @@ func NewMutex() Mutex {
 // goroutine and a cancelation signal.
 //
 // A Context MUST only be created when:
+//
 // 1. Spawning a new goroutine.
 // 2. In a new goroutine which has not been associated with a Context. (e.g. in
 // http.HandlerFunc)
+//
 // In other cases, always use associated Context and pass it around.
 type Context struct {
 	m      []Mutex
@@ -94,7 +106,7 @@ func (ctx *Context) AcquireOrCancel(m Mutex) bool {
 // Release unlocks last acquired Mutex.
 func (ctx *Context) Release() {
 	if n := len(ctx.m); n > 0 {
-		<-ctx.m[n-1]
+		ctx.m[n-1].Unlock()
 		ctx.m = ctx.m[:n-1]
 	}
 }
@@ -102,9 +114,9 @@ func (ctx *Context) Release() {
 // ReleaseAll unlocks all acquired Mutexes, in First-In-Last-Out order.
 func (ctx *Context) ReleaseAll() {
 	for i := len(ctx.m) - 1; i >= 0; i-- {
-		<-ctx.m[i]
+		ctx.m[i].Unlock()
 	}
-	ctx.m = []Mutex{}
+	ctx.m = ctx.m[:0]
 }
 
 // Handler is an interface wraps Serve() which processes a Request and returns a
@@ -122,7 +134,7 @@ type HandlerFunc func(ctx *Context, m Mutex, r Request) Response
 func (f HandlerFunc) Serve(ctx *Context, m Mutex, r Request) (rsp Response) {
 	defer func() {
 		if err := recover(); err != nil {
-			rsp = NewSimpleResponse(nil, PanicError{err, debug.Stack()})
+			rsp = SimpleResponse(nil, PanicError{err, debug.Stack()})
 		}
 	}()
 
@@ -142,12 +154,12 @@ func (f LockedHandlerFunc) Serve(ctx *Context, m Mutex, r Request) (rsp Response
 
 		defer func() {
 			if err := recover(); err != nil {
-				rsp = NewSimpleResponse(nil, PanicError{err, debug.Stack()})
+				rsp = SimpleResponse(nil, PanicError{err, debug.Stack()})
 			}
 		}()
 
 		return f(r)
 
 	}
-	return NewSimpleResponse(nil, ContextCanceledError{})
+	return SimpleResponse(nil, ContextCanceledError{})
 }

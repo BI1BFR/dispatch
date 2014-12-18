@@ -7,8 +7,8 @@ import "github.com/huangml/mux"
 // sequentially and one or more Handlers to do the logic.
 //
 // Call() is used for synchronous communication, it returns after Request has
-// been processed; Send() is used for asynchronous communication, it spawns a
-// new goroutine to process Request and returns immediately.
+// been processed; Send() is used for asynchronous communication, it returns
+// immediately and spawns a new goroutine to process Request.
 //
 // See ConcurrentDest, LockedDest and MuxDest for more details.
 type Dest interface {
@@ -21,7 +21,7 @@ type ConcurrentDest struct {
 	h Handler
 }
 
-// NewConcurrentDest creates an ConcurrentDest with provided Handler.
+// NewConcurrentDest creates a ConcurrentDest with provided Handler.
 func NewConcurrentDest(h Handler) *ConcurrentDest {
 	return &ConcurrentDest{h: h}
 }
@@ -66,7 +66,7 @@ type MuxDest struct {
 }
 
 // NewMuxDest creates a MuxDest with provided Mux.
-// Note that passed Mux MUST either be empty or only has values of type Handler.
+// Note that passed Mux MUST be either empty or only has values of type Handler.
 func NewMuxDest(m *mux.Mux) *MuxDest {
 	return &MuxDest{mu: m, Mutex: NewMutex()}
 }
@@ -83,7 +83,7 @@ func (d *MuxDest) Call(ctx *Context, r Request) Response {
 	if h := d.mu.Match(r.Protocol()); h != nil {
 		return h.(Handler).Serve(ctx, d.Mutex, r)
 	}
-	return NewSimpleResponse(nil, ProtocolNotImplementError(r.Protocol()))
+	return SimpleResponse(nil, ProtocolNotImplementError(r.Protocol()))
 }
 
 // Send is for asynchronous communication. It returns a Response with
